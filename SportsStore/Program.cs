@@ -22,10 +22,11 @@ builder.Services.AddDbContext<StoreDbContext>(opts =>
 
 
 
-builder.Services.AddDbContext<AppIdentityDbContext>(options => {
+builder.Services.AddDbContext<AppIdentityDbContext>(options =>
+{
     options.UseSqlServer(
         builder.Configuration["ConnectionStrings:IdentityConnection"]);
-    });
+});
 builder.Services.AddIdentity<IdentityUser, IdentityRole>().AddEntityFrameworkStores<AppIdentityDbContext>();
 
 builder.Services.AddScoped<IStoreRepository, EFStoreRepository>();
@@ -41,12 +42,26 @@ builder.Services.AddControllers();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+//if (!app.Environment.IsDevelopment())
+//{
+//    app.UseExceptionHandler("/Error");
+//    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+//    app.UseHsts();
+//}
+
+
+// —траница Error примен€етс€ дл€ необработанных исключений,
+// только в производственной среде
+if (app.Environment.IsProduction())
 {
-    app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+    app.UseExceptionHandler("/error");
 }
+else
+{
+    app.UseDeveloperExceptionPage();
+    app.UseStatusCodePages();
+}
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseSession();
@@ -58,10 +73,10 @@ app.UseAuthorization();
 
 
 app.MapControllerRoute("catpage", "{category}/Page{productPage:int}",
-    new { Controller = "Home", action = "Index"});
+    new { Controller = "Home", action = "Index" });
 
 app.MapControllerRoute("page", "Page{productPage:int}",
-    new {Controller = "Home", action = "Index", productPage = 1 });
+    new { Controller = "Home", action = "Index", productPage = 1 });
 
 app.MapControllerRoute("category", "{category}",
     new { Controller = "Home", action = "Index", productPage = 1 });
