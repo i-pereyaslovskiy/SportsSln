@@ -2,6 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SportsStore.Models;
 using System.Globalization;
+using Microsoft.AspNetCore.Identity;
+
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
@@ -16,6 +20,14 @@ builder.Services.AddDbContext<StoreDbContext>(opts =>
         builder.Configuration["ConnectionStrings:SportsStoreConnection"]);
 });
 
+
+
+builder.Services.AddDbContext<AppIdentityDbContext>(options => {
+    options.UseSqlServer(
+        builder.Configuration["ConnectionStrings:IdentityConnection"]);
+    });
+builder.Services.AddIdentity<IdentityUser, IdentityRole>().AddEntityFrameworkStores<AppIdentityDbContext>();
+
 builder.Services.AddScoped<IStoreRepository, EFStoreRepository>();
 builder.Services.AddScoped<IOrderRepository, EFOrderRepository>();
 builder.Services.AddScoped<Cart>(sp => SessionCart.GetCart(sp));
@@ -23,9 +35,8 @@ builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
 
 builder.Services.AddServerSideBlazor();
-
-
 builder.Services.AddControllers();
+
 
 var app = builder.Build();
 
@@ -39,6 +50,11 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseSession();
+
+app.UseRouting();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 
 app.MapControllerRoute("catpage", "{category}/Page{productPage:int}",
@@ -56,15 +72,13 @@ app.MapControllerRoute("pagination",
 
 app.MapDefaultControllerRoute();
 
-app.UseRouting();
-
-app.UseAuthorization();
 
 app.MapRazorPages();
 app.MapBlazorHub();
 app.MapFallbackToPage("/admin/{*catchall}", "/Admin/Index");
 
 SeedData.EnsurePopulated(app);
+IdentitySeedData.EnsurePopulated(app);
 
 app.Run();
 
